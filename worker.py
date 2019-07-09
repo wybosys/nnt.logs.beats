@@ -12,19 +12,21 @@ def Start(level):
     # 工作循环
     while 1:
         began = time.time()
-        # 循环读取所有的nodes
-        cur = 0
-        nex, keys = logs_redis.scan(cur)
-        if cur != nex:
-            cur = nex
-            for node in keys:
-                processNode(str(node), level, logs_redis, mq_redis)
-        else:
-            end = time.time()
-            if end - began > config.WORKER_MINTIME:
-                continue
-            else:                
-                time.sleep(config.WORKER_MINTIME - (end - began))
+        while 1:
+            # 循环读取所有的nodes
+            cur = 0
+            nex, keys = logs_redis.scan(cur)
+            if cur != nex:
+                cur = nex
+                for node in keys:
+                    processNode(str(node), level, logs_redis, mq_redis)
+            else:
+                end = time.time()
+                if end - began > config.WORKER_MINTIME:
+                    pass
+                else:                
+                    time.sleep(config.WORKER_MINTIME - (end - began))
+                break
 
 def processNode(node, level, logs_redis, mq_redis):
     print('处理节点 ' + node)

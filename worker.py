@@ -32,17 +32,18 @@ def processNode(node, level, logs_redis, mq_redis):
         res = logs_redis.lrange(node, 0, config.WORKER_BATCHSIZE)
         if res == None:
             return
-        # 删除老的日志
-        logs_redis.ltrim(node, 0, config.WORKER_BATCHSIZE)
-        print('发送节点 ' + node + ' 的 ' + str(len(res)) + ' 条日志')        
-        # 处理拿到的日志
-        for log in res:
-            try:
-                msg = json.loads(log)
-            except:
-                msg = {'m': log}
-            msg['n'] = node
-            msg['l'] = level
-            mq_redis.publish(config.MQ_CHANNEL, json.dumps(msg, separators=(',', ':')))
+        if len(res):
+            # 删除老的日志
+            logs_redis.ltrim(node, 0, config.WORKER_BATCHSIZE)
+            print('发送节点 ' + node + ' 的 ' + str(len(res)) + ' 条日志')        
+            # 处理拿到的日志
+            for log in res:
+                try:
+                    msg = json.loads(log)
+                except:
+                    msg = {'m': log}
+                msg['n'] = node
+                msg['l'] = level
+                mq_redis.publish(config.MQ_CHANNEL, json.dumps(msg, separators=(',', ':')))
     except:
         pass

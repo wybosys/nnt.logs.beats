@@ -31,8 +31,11 @@ def Start(level):
                 break        
 
 def processNode(node, level, logs_redis, mq_redis):
-    print('处理类型 ' + str(level) + ' 节点 ' + str(node))    
-    res = logs_redis.lrange(node, 0, config.WORKER_BATCHSIZE - 1)
+    print('处理类型 ' + str(level) + ' 节点 ' + str(node))
+    try:
+        res = logs_redis.lrange(node, 0, config.WORKER_BATCHSIZE - 1)
+    except:        
+        res = None
     if res == None:
         return
     count = 0

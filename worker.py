@@ -23,16 +23,18 @@ def Start(level):
             end = time.time()
             if end - began > config.WORKER_MINTIME:
                 continue
-            else:
+            else:                
                 time.sleep(config.WORKER_MINTIME - (end - began))
 
 def processNode(node, level, logs_redis, mq_redis):
+    print('处理节点 ' + node)
     try:
         res = logs_redis.lrange(node, 0, config.WORKER_BATCHSIZE)
         if res == None:
             return
         # 删除老的日志
         logs_redis.ltrim(node, 0, config.WORKER_BATCHSIZE)
+        print('发送节点 ' + node + ' 的 ' + str(len(res)) + ' 条日志')        
         # 处理拿到的日志
         for log in res:
             try:

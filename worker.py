@@ -11,6 +11,7 @@ def Start(level):
     mq_redis = redis.Redis().from_url(config.MQ_REDIS + '/0')
     # 工作循环
     while 1:
+        print('处理 ' + str(level) + ' 的日志')
         began = time.time()
         while 1:
             # 循环读取所有的nodes
@@ -22,11 +23,12 @@ def Start(level):
                     processNode(str(node), level, logs_redis, mq_redis)
             else:
                 end = time.time()
-                if end - began > config.WORKER_MINTIME:
+                if (end - began) > config.WORKER_MINTIME:
                     pass
-                else:                
+                else:
+                    print(str(level) + ' 日志处理过快，休眠一会')
                     time.sleep(config.WORKER_MINTIME - (end - began))
-                break
+                break        
 
 def processNode(node, level, logs_redis, mq_redis):
     print('处理节点 ' + node)

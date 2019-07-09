@@ -18,7 +18,7 @@ def Start(level):
         if cur != nex:
             cur = nex
             for node in keys:
-                processNode(node, level, logs_redis, mq_redis)
+                processNode(str(node), level, logs_redis, mq_redis)
         else:
             end = time.time()
             if end - began > config.WORKER_MINTIME:

@@ -1,7 +1,7 @@
 {
-    "logsredis": "logs",
+    "logsredis": "redis://logs:6379",
     "channel": "nnt-logs",
-    "mqredis": "logs",
+    "mqredis": "redis://logs:6379",
     "minworktime": 60,
     "batchsize": 100
 }

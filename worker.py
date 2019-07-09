@@ -17,7 +17,7 @@ def Start(level):
         while 1:
             # 循环读取所有的nodes
             nex, keys = logs_redis.scan(cur)
-            if cur != nex:
+            if cur != 0:
                 cur = nex
                 for node in keys:
                     processNode(str(node), level, logs_redis, mq_redis)

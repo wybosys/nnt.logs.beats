@@ -19,7 +19,7 @@ def Start(level):
             nex, keys = logs_redis.scan(cur)
             for node in keys:
                 processNode(node, level, logs_redis, mq_redis)
-            if cur != 0:
+            if nex != 0:
                 cur = nex
             else:
                 end = time.time()

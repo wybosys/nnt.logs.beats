@@ -18,7 +18,7 @@ def Start(level):
             # 循环读取所有的nodes
             nex, keys = logs_redis.scan(cur)
             for node in keys:
-                processNode(str(node), level, logs_redis, mq_redis)
+                processNode(node, level, logs_redis, mq_redis)
             if cur != 0:
                 cur = nex
             else:
@@ -31,23 +31,25 @@ def Start(level):
                 break        
 
 def processNode(node, level, logs_redis, mq_redis):
-    print('处理节点 ' + node)
+    print('处理节点 ' + str(node))
     try:
         res = logs_redis.lrange(node, 0, config.WORKER_BATCHSIZE)
         if res == None:
             return
-        if len(res):
+        while len(res):
             # 删除老的日志
             logs_redis.ltrim(node, 0, config.WORKER_BATCHSIZE)
-            print('发送节点 ' + node + ' 的 ' + str(len(res)) + ' 条日志')        
+            print('发送节点 ' + str(node) + ' 的 ' + str(len(res)) + ' 条日志')        
             # 处理拿到的日志
             for log in res:
                 try:
-                    msg = json.loads(log)
+                    msg = json.loads(str(log))
                 except:
                     msg = {'m': log}
                 msg['n'] = node
                 msg['l'] = level
-                mq_redis.publish(config.MQ_CHANNEL, json.dumps(msg, separators=(',', ':')))
+                mq_redis.publish(bytes(config.MQ_CHANNEL, 'utf-8'), bytes(json.dumps(msg, separators=(',', ':')), 'utf-8'))
+            # 获取下一批
+            res = logs_redis.lrange(node, 0, config.WORKER_BATCHSIZE)
     except:
         pass

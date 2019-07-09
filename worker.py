@@ -31,25 +31,26 @@ def Start(level):
                 break        
 
 def processNode(node, level, logs_redis, mq_redis):
-    print('处理节点 ' + str(node))
-    try:
-        res = logs_redis.lrange(node, 0, config.WORKER_BATCHSIZE)
-        if res == None:
-            return
-        while len(res):
-            # 删除老的日志
-            logs_redis.ltrim(node, 0, config.WORKER_BATCHSIZE)
-            print('发送节点 ' + str(node) + ' 的 ' + str(len(res)) + ' 条日志')        
-            # 处理拿到的日志
-            for log in res:
-                try:
-                    msg = json.loads(str(log))
-                except:
-                    msg = {'m': log}
-                msg['n'] = node
-                msg['l'] = level
-                mq_redis.publish(bytes(config.MQ_CHANNEL, 'utf-8'), bytes(json.dumps(msg, separators=(',', ':')), 'utf-8'))
-            # 获取下一批
-            res = logs_redis.lrange(node, 0, config.WORKER_BATCHSIZE)
-    except:
-        pass
+    print('处理类型 ' + str(level) + ' 节点 ' + str(node))    
+    res = logs_redis.lrange(node, 0, config.WORKER_BATCHSIZE - 1)
+    if res == None:
+        return
+    count = 0
+    while len(res):
+        # 删除老的日志
+        logs_redis.ltrim(node, config.WORKER_BATCHSIZE, -1)
+        # print('发送节点 ' + str(node) + ' 的 ' + str(len(res)) + ' 条日志')        
+        count += len(res)
+        # 处理拿到的日志
+        for log in res:
+            try:
+                msg = json.loads(str(log))
+            except:
+                msg = {'m': str(log)}
+            msg['n'] = str(node)
+            msg['l'] = level
+            mq_redis.publish(bytes(config.MQ_CHANNEL, 'utf-8'), json.dumps(msg, separators=(',', ':')))
+        # 获取下一批
+        res = logs_redis.lrange(node, 0, config.WORKER_BATCHSIZE - 1)
+    print('发送类型 ' + str(level) + ' 节点 ' + str(node) + ' 的 ' + str(count) + ' 条日志')
+

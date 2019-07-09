@@ -17,10 +17,10 @@ def Start(level):
         while 1:
             # 循环读取所有的nodes
             nex, keys = logs_redis.scan(cur)
+            for node in keys:
+                processNode(str(node), level, logs_redis, mq_redis)
             if cur != 0:
                 cur = nex
-                for node in keys:
-                    processNode(str(node), level, logs_redis, mq_redis)
             else:
                 end = time.time()
                 if (end - began) > config.WORKER_MINTIME:

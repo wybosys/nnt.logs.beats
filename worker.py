@@ -1,5 +1,5 @@
 import config
-import redis, time
+import redis, time, json
 
 def Start(level):
     '''
@@ -18,7 +18,7 @@ def Start(level):
         if cur != nex:
             cur = nex
             for node in keys:
-                processNode(node, logs_redis, mq_redis)
+                processNode(node, level, logs_redis, mq_redis)
         else:
             end = time.time()
             if end - began > config.WORKER_MINTIME:
@@ -26,5 +26,21 @@ def Start(level):
             else:
                 time.sleep(config.WORKER_MINTIME - (end - began))
 
-def processNode(node, logs_redis, mq_redis):
-    pass
+def processNode(node, level, logs_redis, mq_redis):
+    try:
+        res = logs_redis.lrange(node, 0, config.WORKER_BATCHSIZE)
+        if res == None:
+            return
+        # 删除老的日志
+        logs_redis.ltrim(node, 0, config.WORKER_BATCHSIZE)
+        # 处理拿到的日志
+        for log in res:
+            try:
+                msg = json.loads(log)
+            except:
+                msg = {'m': log}
+            msg['n'] = node
+            msg['l'] = level
+            mq_redis.publish(config.MQ_CHANNEL, json.dumps(msg, separators=(',', ':')))
+    except:
+        pass

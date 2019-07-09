@@ -13,9 +13,9 @@ def Start(level):
     while 1:
         print('处理 ' + str(level) + ' 的日志')
         began = time.time()
+        cur = 0
         while 1:
             # 循环读取所有的nodes
-            cur = 0
             nex, keys = logs_redis.scan(cur)
             if cur != nex:
                 cur = nex
